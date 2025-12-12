@@ -2,9 +2,16 @@ TWITCH_CLIENT_ID=your_client_id
 TWITCH_CLIENT_SECRET=your_client_secret
 
 #Change this to your username:
-BROADCASTER_USERNAME=aj_hyper_bit
+BROADCASTER_USERNAME=change_this_user
 #Change this to your bot's username (can be the same as broadcaster):
-BOT_USERNAME=aj_hyper_bit
+BOT_USERNAME=change_this_user
+
+#Valid modes are: title, chat, queued
+mode=queued
+
+############## MESSAGE VARIABLES ##############
+#Rate to process messages at. Default is 1/sec
+RATE_PER_SEC=1
 
 ############### TITLE VARIABLES ###############
 
@@ -13,7 +20,8 @@ UPDATE_INTERVAL_MINUTES=30
 
 #To update the title, you need to add a digit to insert after, so with an example:
 #YOLK OR TREAT DAY 1/2 - 5 SUBS = YOUR OWN DRAWN YOLK [!PP !WOOD !MILKIES !MOBILE ]
-#If you want to update the 5, you need to count how many space delimited words, so after 6 words you want the number there.
+#If you want to update the 5, you need to count how many space delimited words, 
+#so after 6 words you want the number there.
 #Note: do not include the number inside the title variable
 title="YOLK OR TREAT DAY 1/2 -  SUBS = YOUR OWN DRAWN YOLK [!PP !WOOD !MILKIES !MOBILE ]"
 insert_after=6
@@ -33,7 +41,7 @@ BASE_MULT=2 #Multiple of number of subs you want to add to the counter (2 = *2, 
 ################ OBS VARIABLES ################
 
 #Not currently working. If you want a project that implements these,
-#find DougDoug's github and refer to his code
+#find DougDoug's github and refer to his code. That is what I was referring to.
 WEBSOCKET_HOST=localhost
 WEBSOCKET_PORT=4455
 WEBSOCKET_PASSWORD=TwitchChat9

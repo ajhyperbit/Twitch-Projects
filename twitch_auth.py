@@ -48,7 +48,7 @@ class TwitchAuth:
         print(f"Tokens saved to {self.token_file}")
 
     def load_token(self):
-        print("DEBUG: self.token_file =", self.token_file)
+        #print("DEBUG: self.token_file =", self.token_file)
         if not os.path.exists(self.token_file):
             return None
         with open(self.token_file, "r") as f:

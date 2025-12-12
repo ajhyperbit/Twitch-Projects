@@ -50,7 +50,7 @@ def get_channel_id(username: str) -> str:
         raise ValueError(f"No user found with username '{username}'")
     return data["data"][0]["id"]
 
-async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, version=1):
+async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, version=1, printDebug=1):
     """
     Subscribes to a Twitch EventSub topic with debug logging.
     """
@@ -62,11 +62,11 @@ async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, v
         "transport": {"method": "websocket", "session_id": session_id}
     }
     headers = auth.get_headers(json_body=True)
-
-    print("\n=== EventSub Debug ===")
-    print("Payload:", json.dumps(payload, indent=2))
-    print("Headers:", json.dumps(headers, indent=2))
-    print("Sending Request...\n")
+    if printDebug == 0:
+        print("\n=== EventSub Debug ===")
+        print("Payload:", json.dumps(payload, indent=2))
+        print("Headers:", json.dumps(headers, indent=2))
+        print("Sending Request...\n")
 
     async with aiohttp.ClientSession() as session:
         async with session.post(TWITCH_API_URL, headers=headers, json=payload) as resp:
@@ -74,11 +74,12 @@ async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, v
                 data = await resp.json()
             except Exception:
                 text = await resp.text()
-                print("Non-JSON Response:", text)
+                if printDebug == 0:
+                    print("Non-JSON Response:", text)
                 return
-
-            print("Status:", resp.status)
-            print("Response:", json.dumps(data, indent=2))
+            if printDebug == 0:
+                print("Status:", resp.status)
+                print("Response:", json.dumps(data, indent=2))
 
             if resp.status == 403:
                 print(f"\nAuthorization failed for subscription {event_type} v{version} with condition {condition}")
@@ -102,16 +103,20 @@ async def twitch_listener(auth: TwitchAuth):
                 broadcaster_id = get_channel_id(BROADCASTER_USERNAME)
                 user_id = get_channel_id(BOT_USERNAME)
                 # Chat messages
-                await subscribe_event(
-                    auth,
-                    session_id,
-                    "channel.chat.message",
-                    {
-                        "broadcaster_user_id": broadcaster_id,
-                        "user_id": user_id
-                    }
-                )
-
+                try:
+                    await subscribe_event(
+                        auth,
+                        session_id,
+                        "channel.chat.message",
+                        {
+                            "broadcaster_user_id": broadcaster_id,
+                            "user_id": user_id
+                        }
+                    )
+                except Exception as e:
+                    print(e)
+                finally:
+                    pass
                 # Uncomment if needed:
                 # await subscribe_event(
                 #     session_id,
@@ -131,14 +136,10 @@ async def twitch_listener(auth: TwitchAuth):
                 event = data["payload"]["event"]
 
                 if event_type == "channel.chat.message":
-                    user = event["chatter_user_name"]
-                    msg_text = event["message"]["text"]
-                    broadcaster_user_name = event["broadcaster_user_name"]
-                    print(f"[Chat: {broadcaster_user_name}] {user}: {msg_text}")
-                    #await message_queue.put({'user': user, 'message': msg_text})
+                    await message_queue.put({'data': data})
                 
-                elif event_type == "":
-                    pass
+                #elif event_type == "channel.":
+                #    pass
 
             elif mtype == "session_reconnect":
                 new_url = data["payload"]["session"]["reconnect_url"]
@@ -147,17 +148,16 @@ async def twitch_listener(auth: TwitchAuth):
 
 async def process_messages(rate_per_second=1):
     if rate_per_second == -1:
-        pass
+        while True:
+            msg = await message_queue.get()
+
+            yield msg
     else:
         interval = 1 / rate_per_second
         while True:
-            event = await message_queue.get()
-            user = event['user']
-            msg_text = event['message']
+            msg = await message_queue.get()
 
-            # Here you can do anything with the message
-            print(f"Processing message from {user}: {msg_text}")
-
+            yield msg
             await asyncio.sleep(interval)  # Wait before processing next message
 
 ######### Title Functions #########

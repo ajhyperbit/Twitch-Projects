@@ -46,11 +46,13 @@
         emoji
         flask
         irc
+        keyboard
         millify
         obs-websocket-py
         pandas
         pillow
         pre-commit-hooks
+        pynput
         python-dateutil
         pytz
         requests
