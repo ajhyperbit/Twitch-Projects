@@ -7,6 +7,7 @@ millify>=0.1.1
 pandas>=2.2.3
 pillow>=11.2.1
 pre_commit_hooks>=5.0.0
+pynput>=1.8.1
 python-dateutil>=2.9.0.post0
 pytz>=2025.2
 requests>=2.32.3
