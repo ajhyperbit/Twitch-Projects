@@ -4,7 +4,7 @@ import asyncio
 from twitch_functions import *
 from twitch_auth import TwitchAuth
 from scopes import SCOPES
-import KeyCodes
+from KeyCodes import *
 #from chat import main_chat
 
 load_dotenv()
@@ -70,10 +70,10 @@ async def queued_msgs(auth):
                             pass
                         else:
                             #print("Cheer msg")
-                            KeyCodes.HoldAndReleaseKey('G', 0.5)
+                            HoldAndReleaseKey(G, 0.5)
                             #print(f"[Chat: {broadcaster_user_name}] {user}: {msg_text}")
                         if user == 'aj_hyper_bit' and '!hehe' in msg_text:
-                            pass
+                            HoldAndReleaseKey(G, 0.5)
     finally:
         listener_task.cancel()
 
