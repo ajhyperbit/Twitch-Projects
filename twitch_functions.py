@@ -15,6 +15,7 @@ CLIENT_ID = os.getenv("TWITCH_CLIENT_ID")
 CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")
 BROADCASTER_USERNAME = os.getenv("BROADCASTER_USERNAME")
 BOT_USERNAME = os.getenv("BOT_USERNAME")
+DEBUG = (os.getenv("DEBUG"))
 
 #Title variables
 MAX_SUBS = int(os.getenv("MAX_SUBS"))
@@ -50,7 +51,7 @@ def get_channel_id(username: str) -> str:
         raise ValueError(f"No user found with username '{username}'")
     return data["data"][0]["id"]
 
-async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, version=1, printDebug=1):
+async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, version=1, printDebug=DEBUG):
     """
     Subscribes to a Twitch EventSub topic with debug logging.
     """
@@ -62,7 +63,7 @@ async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, v
         "transport": {"method": "websocket", "session_id": session_id}
     }
     headers = auth.get_headers(json_body=True)
-    if printDebug == 0:
+    if printDebug == 1:
         print("\n=== EventSub Debug ===")
         print("Payload:", json.dumps(payload, indent=2))
         print("Headers:", json.dumps(headers, indent=2))
@@ -74,10 +75,10 @@ async def subscribe_event(auth: TwitchAuth, session_id, event_type, condition, v
                 data = await resp.json()
             except Exception:
                 text = await resp.text()
-                if printDebug == 0:
+                if printDebug == 1:
                     print("Non-JSON Response:", text)
                 return
-            if printDebug == 0:
+            if printDebug == 1:
                 print("Status:", resp.status)
                 print("Response:", json.dumps(data, indent=2))
 
