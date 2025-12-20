@@ -1,3 +1,24 @@
+"""
+Twitch OAuth2 scopes for permission levels.
+
+Scopes define what permissions the bot requests during OAuth authentication.
+Only enabled scopes are requested from users. Disabled (commented) scopes are
+provided as reference for future features.
+
+Reference: https://dev.twitch.tv/docs/authentication/scopes
+
+Enabled Scopes:
+- channel:bot: Allow bot to send chat messages
+- user:read:chat: Allow reading chat messages
+- user:bot: Allow bot functionality  
+- bits:read: Allow reading cheer/bits information
+- channel:manage:broadcast: Allow updating channel info (title, category)
+
+Example usage:
+    from scopes import SCOPES
+    auth = TwitchAuth(scopes=SCOPES)
+"""
+
 SCOPES = [
     #########################
     # Needed to read chat #

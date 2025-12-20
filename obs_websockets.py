@@ -1,3 +1,25 @@
+"""
+OBS WebSocket integration module.
+
+Provides connection and control interface for Open Broadcaster Software (OBS)
+via WebSocket protocol. Allows programmatic control of OBS scenes, sources, and
+settings from Python.
+
+Setup:
+    1. Enable WebSocket Server in OBS (Tools > WebSocket Server Settings)
+    2. Configure WEBSOCKET_HOST, WEBSOCKET_PORT, WEBSOCKET_PASSWORD in .env
+    3. Create OBSWebsocketsManager() to connect
+
+Example:
+    obs = OBSWebsocketsManager()
+    obs.toggle_source_mute("Microphone")
+    
+Note:
+    - Requires obswebsocket Python package
+    - OBS must have WebSocket Server enabled
+    - Currently not integrated into main.py
+"""
+
 import time
 import os
 from obswebsocket import obsws, requests
@@ -10,41 +32,103 @@ WEBSOCKET_PORT = (os.getenv("WEBSOCKET_PORT"))
 WEBSOCKET_PASSWORD = (os.getenv("WEBSOCKET_PASSWORD"))
 
 class OBSWebsocketsManager:
+    """
+    Manager for OBS WebSocket connections and control.
+    
+    Handles connection to OBS via WebSocket protocol and provides
+    methods to control scenes, sources, and settings.
+    
+    Attributes:
+        ws: Active OBS WebSocket connection object
+    """
     ws = None
     
     def __init__(self):
+        """
+        Initialize and connect to OBS WebSocket server.
+        
+        Requires WEBSOCKET_HOST, WEBSOCKET_PORT, WEBSOCKET_PASSWORD
+        environment variables to be set.
+        
+        Raises:
+            ConnectionError: If WebSocket connection fails
+        """
         # Connect to websockets
         self.ws = obsws(WEBSOCKET_HOST, WEBSOCKET_PORT, WEBSOCKET_PASSWORD)
         self.ws.connect()
         print("Connected to OBS Websockets!\n")
 
     def disconnect(self):
+        """Disconnect from OBS WebSocket server."""
         self.ws.disconnect()
 
-    # Set the current scene
     def set_scene(self, new_scene):
+        """
+        Set the current program scene in OBS.
+        
+        Args:
+            new_scene (str): Name of scene to activate
+        """
         self.ws.call(requests.SetCurrentProgramScene(sceneName=new_scene))
 
-    # Set the visibility of any source's filters
     def set_filter_visibility(self, source_name, filter_name, filter_enabled=True):
+        """
+        Enable or disable a filter on a source.
+        
+        Args:
+            source_name (str): Name of the source
+            filter_name (str): Name of the filter to toggle
+            filter_enabled (bool): True to enable, False to disable
+        """
         self.ws.call(requests.SetSourceFilterEnabled(sourceName=source_name, filterName=filter_name, filterEnabled=filter_enabled))
 
-    # Set the visibility of any source
     def set_source_visibility(self, scene_name, source_name, source_visible=True):
+        """
+        Show or hide a source in a scene.
+        
+        Args:
+            scene_name (str): Name of the scene
+            source_name (str): Name of the source
+            source_visible (bool): True to show, False to hide
+        """
         response = self.ws.call(requests.GetSceneItemId(sceneName=scene_name, sourceName=source_name))
         myItemID = response.datain['sceneItemId']
         self.ws.call(requests.SetSceneItemEnabled(sceneName=scene_name, sceneItemId=myItemID, sceneItemEnabled=source_visible))
 
-    # Returns the current text of a text source
     def get_text(self, source_name):
+        """
+        Get the current text content of a text source.
+        
+        Args:
+            source_name (str): Name of the text source
+            
+        Returns:
+            str: Current text content
+        """
         response = self.ws.call(requests.GetInputSettings(inputName=source_name))
         return response.datain["inputSettings"]["text"]
 
-    # Returns the text of a text source
     def set_text(self, source_name, new_text):
+        """
+        Update the text content of a text source.
+        
+        Args:
+            source_name (str): Name of the text source
+            new_text (str): New text to display
+        """
         self.ws.call(requests.SetInputSettings(inputName=source_name, inputSettings = {'text': new_text}))
 
     def get_source_transform(self, scene_name, source_name):
+        """
+        Get position and dimensions of a source in a scene.
+        
+        Args:
+            scene_name (str): Name of the scene
+            source_name (str): Name of the source
+            
+        Returns:
+            dict: Transform data with positionX, positionY, width, height, etc.
+        """
         response = self.ws.call(requests.GetSceneItemId(sceneName=scene_name, sourceName=source_name))
         myItemID = response.datain['sceneItemId']
         response = self.ws.call(requests.GetSceneItemTransform(sceneName=scene_name, sceneItemId=myItemID))

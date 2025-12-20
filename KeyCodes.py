@@ -1,14 +1,32 @@
 # DougDoug Note: 
 # This code contains key codes plus functions to press keys on Windows
 # You should not need to modify anything in this file, just use as is.
-#Original Codebase:
-#https://github.com/DougDougGithub/TwitchPlays/blob/main/TwitchPlays_KeyCodes.py
+# Original Codebase: https://github.com/DougDougGithub/TwitchPlays/blob/main/TwitchPlays_KeyCodes.py
+
+"""
+DirectX key code mappings and keyboard input simulation.
+
+Provides DirectX key codes (used by Windows for input events) and utilities
+to simulate keyboard input programmatically. Supports both direct key codes
+(hex constants) and ASCII character strings.
+
+Usage:
+    from KeyCodes import HoldAndReleaseKey, Q, A
+    HoldAndReleaseKey(Q, 0.5)  # Hold Q for 0.5 seconds
+    HoldAndReleaseKey("hello", 0.1)  # Type "hello" (0.1s per key)
+
+Note:
+    - Works only on Windows (uses DirectX/pynput Windows bindings)
+    - Linux: Returns placeholder that prints warning message
+    - For chat commands using keyboard input
+"""
 
 import time
 import ctypes
 import pynput
 import platform
 
+IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
 #############################################################
@@ -129,10 +147,53 @@ MOUSE_WHEEL_DOWN = 0x109
 
 # Direct Input functions found at: https://stackoverflow.com/questions/53643273/how-to-keep-pynput-and-ctypes-from-clashing
 # Use these to prevent conflict errors with pynput.
-if not IS_LINUX:
+if IS_WINDOWS:
     SendInput = ctypes.windll.user32.SendInput
 
+def char_to_keycode(ch):
+    """
+    Convert single ASCII character to DirectX key code.
+    
+    Maps a single character (a-z, 0-9) to its corresponding DirectX key code.
+    Handles uppercase by storing lowercase keycode (Windows handles shift).
+    
+    Args:
+        ch (str): Single character ('a', 'Z', '5', etc.)
+        
+    Returns:
+        int: DirectX key code (hex value)
+        
+    Raises:
+        ValueError: If character has no key mapping
+        
+    Example:
+        keycode = char_to_keycode('Q')  # Returns 0x10
+    """
+    if ch == ' ':
+        name = 'KEY_SPACE'
+    else:
+        name = f'KEY_{ch.upper()}'
+
+    try:
+        return globals()[name]
+    except KeyError:
+        raise ValueError(f"No key mapping for character: {ch}")
+
 def HoldKey(hexKeyCode):
+    """
+    Hold down a key indefinitely.
+    
+    Simulates pressing a key down without releasing. Must be paired with ReleaseKey()
+    to complete the key press. Ignores on Linux (prints warning).
+    
+    Args:
+        hexKeyCode (int): DirectX key code (from KeyCodes constants)
+        
+    Example:
+        HoldKey(Q)  # Hold Q down
+        time.sleep(1)
+        ReleaseKey(Q)  # Release Q
+    """
     if IS_LINUX:
         print("Not doing inputs, we're on Linux")
     else:
@@ -143,6 +204,20 @@ def HoldKey(hexKeyCode):
         SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 def ReleaseKey(hexKeyCode):
+    """
+    Release a held key.
+    
+    Simulates releasing a key. Must be paired with HoldKey() to complete the key press.
+    Ignores on Linux (prints warning).
+    
+    Args:
+        hexKeyCode (int): DirectX key code (from KeyCodes constants)
+        
+    Example:
+        HoldKey(Q)
+        time.sleep(1)
+        ReleaseKey(Q)  # Release Q
+    """
     if IS_LINUX:
         print("Not doing inputs, we're on Linux")
     else:
@@ -152,8 +227,31 @@ def ReleaseKey(hexKeyCode):
         x = pynput._util.win32.INPUT(ctypes.c_ulong(1), ii_)
         SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
-# Holds down a key for the specified number of seconds
 def HoldAndReleaseKey(hexKeyCode, seconds):
+    """
+    Simulate holding down a key for specified duration.
+    
+    Complete key press sequence: press -> hold -> release.
+    Supports both DirectX key codes (int) and ASCII strings.
+    
+    Args:
+        hexKeyCode (int or str): DirectX key code or string of characters
+        seconds (float): Duration to hold each key
+        
+    Example:
+        HoldAndReleaseKey(Q, 0.5)  # Press and hold Q for 0.5 seconds
+        HoldAndReleaseKey("hello", 0.1)  # Type "hello" with 0.1s per key
+    """
+    # STRING PATH
+    if isinstance(hexKeyCode, str):
+        for ch in hexKeyCode:
+            keycode = char_to_keycode(ch)
+            HoldKey(keycode)
+            time.sleep(seconds)
+            ReleaseKey(keycode)
+        return
+
+    # CONSTANT PATH
     HoldKey(hexKeyCode)
     time.sleep(seconds)
     ReleaseKey(hexKeyCode)
